@@ -63,7 +63,7 @@
                         new ServerMainModule(sqlParserOptions));
                 // add 个空值        
                 modules.addAll(getAdditionalModules());
-                // 定义一个引导程序 (定义logy,初始化log设为true,显示Binding设为true, 复制modules)
+                // 定义一个引导程序 (定义log,初始化log设为true,显示Binding设为true, 复制modules)
                 Bootstrap app = new Bootstrap(modules.build());
 
                 try {
@@ -101,3 +101,34 @@
              public static <E> ImmutableList<E> of() {
                  return (ImmutableList<E>) EMPTY;
              }
+
+        // announcer.start方法
+        public void start() {
+                Preconditions.checkState(!this.executor.isShutdown(), "Announcer has been destroyed");
+                //CAS方法
+                if(this.started.compareAndSet(false, true)) {
+                    try {
+                        this.announce().get(30L, TimeUnit.SECONDS);
+                    } catch (Exception var2) {
+                        ;
+                    }
+                }
+         }
+         
+            /**
+             *  如果当前值等于期待的值，将值设置至给定的更新值。
+             * Atomically sets the value to the given updated value
+             * if the current value {@code ==} the expected value.
+             *
+             * @param expect the expected value
+             * @param update the new value
+             * @return {@code true} if successful. False return indicates that
+             * the actual value was not equal to the expected value.
+             */
+            public final boolean compareAndSet(boolean expect, boolean update) {
+                int e = expect ? 1 : 0;
+                int u = update ? 1 : 0;
+               // CAS方法
+               //如果主内存中的值是期望的e则替换成u并返回true,否则返回false。
+                return unsafe.compareAndSwapInt(this, valueOffset, e, u);
+            }
